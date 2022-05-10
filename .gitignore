@@ -1,0 +1,9 @@
+# Reverse policy .gitignore
+*
+!README.md
+!LICENSE
+!package.json
+!index.js
+!test.js
+!.editorconfig
+!.gitignore
