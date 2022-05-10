@@ -22,7 +22,7 @@ But for now (if you have the guts), refer to [PicoChat](https://github.com/telam
 - [picostore](https://github.com/telamon/picostore) Redux-like state machine.
 - [piconet](https://github.com/telamon/piconet) Internet Protocol redesigned for P2P, provides a stateless and easy to use alternative to network streams.
 - [Modem56](https://github.com/telamon/picochat/blob/master/modem56.js) hyperswarm wrapper providing pico-net streams instead of sockets.
-- [nuro](https://github.com/telamon/picochat/blob/master/blockend/nuro.js) A pure functional approach to reactive store pattern, desig reactive neural pathways framework agnostic.
+- [nuro](https://github.com/telamon/picochat/blob/master/blockend/nuro.js) A pure functional approach to reactive store pattern, design your own reactive neural pathways, it's completely framework agnostic.
 
 
 ## Ad
