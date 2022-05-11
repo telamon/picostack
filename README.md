@@ -46,7 +46,7 @@ const userFeed = new Feed()
 const DB = levelup(leveljs('myapp')) // Open IndexedDB
 const store = new PicoStore(DB)
 store.register(TimeReducer())
-await store.load() /
+await store.load() // Restores previously saved state
 
 // Setup a minimal network-controller
 const hub = new Hub(async (node, message, reply) => {
@@ -122,7 +122,7 @@ And frontend:
     // Button mutates 'DecentTime' to Date.now() when clicked
     // and broadcasts the new block across the network.
     document
-      .getElementById('increment-button')
+      .getElementById('the-button')
       .on('click', async () => {
         await mutate(Date.now())
       })
