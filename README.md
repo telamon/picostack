@@ -29,7 +29,7 @@ I want to document and consolidate these components into a single easy to use mo
 
 But for now (if you have the guts), refer to [PicoChat](https://github.com/telamon/picochat/) source, it serves as reference for this technology.
 
-Here's the gist of a app-kernel that
+Here's the gist of an app that
 has a single decentralized variable called `DecentTime`:
 
 ```js
