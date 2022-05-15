@@ -19,7 +19,7 @@ It allows you to build Progressive Web Apps that work completely without a serve
 - [picostore](https://github.com/telamon/picostore) Redux-like state machine.
 - [piconet](https://github.com/telamon/piconet) Internet Protocol redesigned for P2P, provides a stateless and easy to use alternative to network streams.
 - [Modem56](https://github.com/telamon/picochat/blob/master/modem56.js) hyperswarm to pico-net converter.
-- [nuro](https://github.com/telamon/picochat/blob/master/blockend/nuro.js) A pure functional approach to reactive store pattern, design your own reactive neural pathways, completely framework agnostic.
+- [nuro](https://github.com/telamon/piconuro) A pure functional approach to reactive store pattern, design your own reactive neural pathways, completely framework agnostic.
 - [HyperSimulator](https://github.com/telamon/hyper-simulator) Run dat/[hyper](https://hypercore-protocol.org/)-apps in an in-memory swarm and watch the chaos unfold.
 - [picorepo](https://github.com/telamon/picorepo) Lightweight persistent block store ontop of leveldb/leveljs.
 
