@@ -7,3 +7,5 @@
 !test.js
 !.editorconfig
 !.gitignore
+!simple-kernel.js
+!simple-rpc.js

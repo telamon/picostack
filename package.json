@@ -22,5 +22,13 @@
   "devDependencies": {
     "standard": "^17.0.0",
     "tape": "^5.5.3"
+  },
+  "dependencies": {
+    "@telamon/picostore": "^1.6.2",
+    "piconet": "^3.1.1",
+    "piconuro": "^1.0.0"
+  },
+  "peerDependencies": {
+    "picofeed": "^3.3.3"
   }
 }

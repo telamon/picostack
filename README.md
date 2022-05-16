@@ -1,13 +1,12 @@
 ```
-╒═════─══─═─═─═──┐
-│██▀▌ ○ ▐█▀ ▐▀▀▌ │
-│██▀ ▄█ ██▄ █▄▄█ │
-├─┬──────────────┘
-│ └ █ STACK █│
-└────── ─ ─  ─  ─
+██████ ██  ████  █████
+██  ██ ██ ██    ██   ██
+██████ ██ ██    ██   ██ ██ STACK ██
+██     ██ ██    ██   ██ Network Without
+██     ██  ████  █████       Super Node
 ```
 
-> Pico stack is a WEB3.0 framework
+> Pico-stack is a WEB3.0 framework
 
 It allows you to build Progressive Web Apps that work completely without a server/backend/REST-API and without a central database.
 
@@ -22,6 +21,16 @@ It allows you to build Progressive Web Apps that work completely without a serve
 - [nuro](https://github.com/telamon/piconuro) A pure functional approach to reactive store pattern, design your own reactive neural pathways, completely framework agnostic.
 - [HyperSimulator](https://github.com/telamon/hyper-simulator) Run dat/[hyper](https://hypercore-protocol.org/)-apps in an in-memory swarm and watch the chaos unfold.
 - [picorepo](https://github.com/telamon/picorepo) Lightweight persistent block store ontop of leveldb/leveljs.
+
+## Quickstart
+
+Use the project template to start hacking <3
+
+```bash
+npx degit https://github.com/telamon/picostack/seed
+```
+
+Check the `README.md` in the generated folder for further help.
 
 ## usage
 
