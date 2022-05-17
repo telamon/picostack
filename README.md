@@ -24,13 +24,15 @@ It allows you to build Progressive Web Apps that work completely without a serve
 
 ## Quickstart
 
-Use the project template to start hacking <3
+Use the [project template](https://github.com/telamon/picostack-seed-svelte):
 
 ```bash
 npx degit telamon/picostack-seed-svelte my-project
 ```
 
 Check the `README.md` in the generated folder for further help.
+
+[[live demo]](https://pico-todo.surge.sh/)
 
 ## usage
 
