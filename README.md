@@ -30,99 +30,68 @@ Use the [project template](https://github.com/telamon/picostack-seed-svelte):
 npx degit telamon/picostack-seed-svelte my-project
 ```
 
-Check the `README.md` in the generated folder for further help.
+Check the `README.md` in the generated folder.
 
 [[live demo]](https://pico-todo.surge.sh/)
 
 ## usage
 
-I want to document and consolidate these components into a single easy to use module.
-
-But for now (if you have the guts), refer to [PicoChat](https://github.com/telamon/picochat/) source, it serves as reference for this technology.
-
-Here's the gist of an app that
-has a single decentralized variable called `DecentTime`:
-
-> **update** The Example below is a bit outdated, checkout the project template instead
-> and the comments in [SimpleKernel](./simple-kernel.js)
-> I think the next section is going to be replaced with simple-kernel docs and a consice example how to extend it.
-> Modem56 docs are missing... check template/seed.. :(
+Extend [`SimpleKernel`](./simple-kernel.js) when starting new.
 
 ```js
 // blockend.js
 import { SimpleKernel } from 'picostack'
-import levelup from 'levelup'
-import leveljs from 'level-js'
+const { decodeBlock } = SimpleKernel
 
-// Set up the app state handler / store
-const DB = levelup(leveljs('myapp')) // Open IndexedDB
 class Kernel extends SimpleKernel {
   constructor(db) {
     super(db)
-    this.store.register(TimeReducer())
-  }
 
-  async createTimestamp () {
-    await this.createBlock('TimeStamp', { time: Date.now() })
-  }
-}
-
-export default new Kernel(DB)
-
-// PicoStore is a virtual-computer that runs blocks as
-// if they are lines of code.
-// Accepted blocks modify the computer's internal state.
-// The reducers acts as the 'brains'
-// deciding which instructions to run.
-// A.k.a. 'The Consensus'.
-// Please don't PoW or I'll get really upset.
-function TimeReducer () {
-  return {
-    name: 'DecentTime',
-    filter ({ block, state }) {
-      const v = JSON.parse(block.body)
-      // Reject invalid blocks
-      if (v > Date.now()) return 'Invalid block from the future'
-      if (v < state) return 'Outdated block'
-
-      // Accept valid blocks
-      return false
-    },
-    reducer ({ block }) => {
-      // Mutate state
-      return JSON.parse(block.body)
-    }
-  }
-}
-```
-
-And frontend:
-
-```html
-<!doctype html>
-<body>
-  <h1 id="the-value">Unknown</h1>
-  <button id="the-button">Mutate</button>
-
-  <script>
-    import { store, mutate } from './blockend.js'
-
-    // Subscribe to state of 'DecentTime' in store
-    // and continiously update on change.
-    store.on('DecentTime', value => {
-      document.getElementById('the-value').text = value
+    // Register reducer - see picostore docs
+    this.store.register({
+      name: 'clock', // slice name
+      initialValue: 0, // initial state
+      filter ({ block }) { // network-consensus
+        const { type, time } = decodeBlock(block.body)
+        if (type !== 'tick') return true // silent ignore
+        if (time > Date.now()) return 'TimestampFromFuture'
+      },
+      reducer ({ block }) { // mutate state
+        const { time } = decodeBlock(block.body)
+        return time
+      }
     })
+  }
 
-    // Button mutates 'DecentTime' to Date.now() when clicked
-    // and broadcasts the new block across the network.
-    document
-      .getElementById('the-button')
-      .on('click', async () => {
-        await mutate(Date.now())
-      })
-  </script>
-</body>
-</html>
+  // Create action
+  async createTick () {
+    const feed = await this.createBlock(
+      'tick', // BlockType:string
+      { time: Date.now() } // Payload:any
+    )
+    return feed.last.sig // block-id
+  }
+}
+
+async function main() {
+  // Spawn 2 peers
+  const alice = new Kernel(memdown())
+  await alice.boot()
+
+  const bob = new Kernel(memdown())
+  await bob.boot()
+
+  // Attach state-observers
+  alice.store.on('clock', state => console.log('Alice:', state))
+  bob.store.on('clock', state => console.log('Bob:', state))
+
+  // Wire up
+  alice.spawnWire()(bob.spawnWire())
+
+  await alice.createTick()
+  // Both kernels logs new state
+}
+main().catch(console.error)
 ```
 
 ## Ad
@@ -139,13 +108,12 @@ If you're reading this it means that the docs are missing or in a bad state.
 Writing and maintaining friendly and useful documentation takes
 effort and time.
 
-
   __How_to_Help____________________________________.
  |                                                 |
  |  - Open an issue if you have questions!         |
  |  - Star this repo if you found it interesting   |
  |  - Fork off & help document <3                  |
- |  - Say Hi! :) https://discord.gg/K5XjmZx        |
+ |  - Say Hi! :) https://discord.gg/8RMRUPZ9RS     |
  |.________________________________________________|
 ```
 
