@@ -27,7 +27,7 @@ It allows you to build Progressive Web Apps that work completely without a serve
 Use the project template to start hacking <3
 
 ```bash
-npx degit https://github.com/telamon/picostack/seed
+npx degit telamon/picostack-seed-svelte my-project
 ```
 
 Check the `README.md` in the generated folder for further help.
@@ -41,47 +41,31 @@ But for now (if you have the guts), refer to [PicoChat](https://github.com/telam
 Here's the gist of an app that
 has a single decentralized variable called `DecentTime`:
 
+> **update** The Example below is a bit outdated, checkout the project template instead
+> and the comments in [SimpleKernel](./simple-kernel.js)
+> I think the next section is going to be replaced with simple-kernel docs and a consice example how to extend it.
+> Modem56 docs are missing... check template/seed.. :(
+
 ```js
 // blockend.js
-import { Feed, Modem56, PicoStore, Hub } from 'picostack'
+import { SimpleKernel } from 'picostack'
 import levelup from 'levelup'
 import leveljs from 'level-js'
 
-// Set up user identity
-const { sk } = Feed.signPair()
-const userFeed = new Feed()
-
 // Set up the app state handler / store
 const DB = levelup(leveljs('myapp')) // Open IndexedDB
-const store = new PicoStore(DB)
-store.register(TimeReducer())
-await store.load() // Restores previously saved state
-
-// Setup a minimal network-controller
-const hub = new Hub(async (node, message, reply) => {
-  if (message === 'Hello') {
-    // Send local blocks
-    await reply(userFeed.pickle())
-  } else {
-    // Accept remote blocks
-    const blocks = Feed.from(message)
-    await store.dispatch(blocks)
+class Kernel extends SimpleKernel {
+  constructor(db) {
+    super(db)
+    this.store.register(TimeReducer())
   }
-})
 
-// Connect to swarm
-const modem = new Modem56()
-modem.join('A topic', peer => hub.createWire(wire => {
-  console.info('Peer connected', peer)
-  wire.postMessage('Hello')
-    .catch(console.error)
-}))
-
-async function mutate (payload) {
-  userFeed.append(JSON.stringify(payload), sk)
-  const accepted = await store.dispatch(userFeed, true)
-  // TODO: hub.broadcast(accepted)
+  async createTimestamp () {
+    await this.createBlock('TimeStamp', { time: Date.now() })
+  }
 }
+
+export default new Kernel(DB)
 
 // PicoStore is a virtual-computer that runs blocks as
 // if they are lines of code.
@@ -108,7 +92,6 @@ function TimeReducer () {
     }
   }
 }
-export { store, mutate }
 ```
 
 And frontend:
