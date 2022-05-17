@@ -31,7 +31,9 @@ npx degit telamon/picostack-seed-svelte my-project
 ```
 
 Check the `README.md` in the generated folder for further help.
+
 [picostack-seed-svelte](https://github.com/telamon/picostack-seed-svelte)
+
 [live demo](https://pico-todo.surge.sh/)
 
 ## usage
