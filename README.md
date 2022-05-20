@@ -24,10 +24,10 @@ It allows you to build Progressive Web Apps that work completely without a serve
 
 ## Quickstart
 
-Use the [project template](https://github.com/telamon/picostack-seed-svelte):
+Use the [project template](https://github.com/telamon/picostack-template):
 
 ```bash
-npx degit telamon/picostack-seed-svelte my-project
+npx degit telamon/picostack-template my-project
 ```
 
 Check the `README.md` in the generated folder.
