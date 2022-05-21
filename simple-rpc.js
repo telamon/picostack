@@ -9,11 +9,20 @@ const Feed = require('picofeed')
 const { pack, unpack } = require('msgpackr')
 const { write } = require('piconuro')
 
+// const { randomBytes } = require('crypto')
+// TODO: is crypto.randomBytes() available in Browser?
+const randomBytes = n => Buffer.from(
+  Array.from(new Array(n))
+    // Not very random, used to generate a node-id
+    .map(_ => Math.floor(Math.random() * 256))
+)
+
 // Message Types
 const OK = 0
 const ERR = -1
 const QUERY = 1
 const BLOCKS = 2
+const NODE_ID = 3
 
 class SimpleRPC {
   /** Handlers spec:
@@ -32,7 +41,7 @@ class SimpleRPC {
    * }
    */
   constructor (handlers) {
-    // this.nodeId = randomBytes(8)
+    this.nodeId = randomBytes(8)
     this._controller = this._controller.bind(this)
     this.hub = new Hub(
       (...a) => this._controller(...a),
@@ -47,19 +56,24 @@ class SimpleRPC {
   }
 
   spawnWire () {
+    // Internal 'onconnect'
     const plug = this.hub.createWire(hubEnd => {
-      // Internal 'onconnect'
-      this._setConnections(Array.from(this.hub._nodes))
-      this.handlers
-        .onconnect(hubEnd)
-        ?.catch(err => console.error('Handshake failed', err))
+      // Exchange node Id
+      hubEnd.postMessage(encodeMsg(NODE_ID, this.nodeId), true)
+        .then(([msg, reply]) => {
+          if (decodeMsg(msg).type !== OK) return // dupe-peer, wire will close
+          this._setConnections(Array.from(this.hub._nodes))
+          // Exchange done, continue with application handshake
+          return this.handlers.onconnect(hubEnd)
+        })
+        .catch(err => console.error('Handshake failed', err))
     })
     return plug
   }
 
-  _ondisconnect () {
+  _ondisconnect (...a) {
     this._setConnections(Array.from(this.hub._nodes))
-    this.handlers.ondisconnect()
+    this.handlers.ondisconnect(...a)
   }
 
   async _controller (node, msg, replyTo) {
@@ -86,19 +100,19 @@ class SimpleRPC {
             .catch(err => console.error('Failed uploading blocks', err))
         } break
 
+        case NODE_ID:
           // Prevent accidental duplicate peer connections
-          /* TODO:
-        case K_NODE_ID:
-          node.id = data
-          if (this.nodeIds[data]) {
-            this.nodeIds[data]++ // attempt counter
-            return node.close(new Error('DuplicatePeer')) // dedupe peers
+          for (const n of this.hub._nodes) {
+            if (Buffer.isBuffer(n.id) && n.id.equals(data)) {
+              // Ignore dupe-ack error handling as conection is about
+              // to be killed anyway
+              replyTo(encodeMsg(ERR))
+              return node.close(new Error('DuplicatePeer')) // dedupe peers
+            }
           }
-          this.nodeIds[data] = 1
-          D('NodeConnected %s', node.id)
-          if (this.handlers.onhandshake) this.handlers.onhandshake(node)
+          node.id = data
+          await replyTo(encodeMsg(OK))
           break
-          */
 
         default:
           throw new Error(`Unknown message type: ${type}`)
@@ -198,6 +212,11 @@ function encodeMsg (type, obj) {
       data.copy(buffer, 1)
     } break
 
+    case NODE_ID:
+      buffer = Buffer.alloc(8 + 1)
+      obj.copy(buffer, 1)
+      break
+
     default:
       throw new Error('UnknownMessageType: ' + type)
   }
@@ -233,6 +252,10 @@ function decodeMsg (buffer) {
     // deserialize msgpack messages
     case QUERY:
       data = unpack(buffer.slice(1))
+      break
+
+    case NODE_ID:
+      data = buffer.slice(1, 9)
       break
 
     default:

@@ -155,9 +155,9 @@ class SimplePicoKernel {
    * and
    * wire.close() // disconnects the peer
    */
-  async onconnect (wire) {
+  async onconnect (node) {
     // Ask peer for blocks
-    await this.rpc.query(wire)
+    await this.rpc.query(node)
   }
 
   /**

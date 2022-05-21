@@ -37,7 +37,7 @@ test('SimpleKernel.$connections neuron', async t => {
   t.equal(c.length, 0, 'Zero connections')
 })
 
-test.skip('Prevent duplicate peer connections', async t => {
+test('Prevent duplicate peer connections', async t => {
   const alice = new SimpleKernel(DB())
   const bob = new SimpleKernel(DB())
   const plug = alice.spawnWire()
