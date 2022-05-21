@@ -9,19 +9,19 @@ const KEY_SK = 'reg/sk'
 /* This is a simple but complete pico-kernel,
  * It sets up a user-identity, store and rpc.
  * It uses msgpack as block-encoder and also injects
- * sequence-number, type and timestamp props in each block.
+ * sequence-number, type and timestamp props into each block.
  *
  * If you need something more advanced feel free to
  * fork off and hack. <3
  */
 class SimplePicoKernel {
-  constructor (db) {
+  constructor (db, opts = {}) {
     // Setup store
     this.db = db
     this.repo = new Repo(db)
     this.store = new Store(this.repo, this.mergeStrategy.bind(this))
     this.ready = false
-    this._secret = null
+    this._secret = opts.secret ?? null
 
     // Setup network
     this.rpc = new SimpleRPC({
@@ -42,15 +42,18 @@ class SimplePicoKernel {
   async boot () {
     if (this.__loading) return this.__loading
     this.__loading = (async () => {
-      try {
-        // Attempt to restore existing identity
-        this._secret = await this.repo.readReg(KEY_SK)
-      } catch (err) {
-        if (!err.notFound) throw err
+      // If identity wasn't provided via opts.
+      if (!this._secret) {
+        try {
+          // Attempt to restore existing identity
+          this._secret = await this.repo.readReg(KEY_SK)
+        } catch (err) {
+          if (!err.notFound) throw err
+        }
       }
 
+      // Fallback to generate new identity
       if (!this._secret) {
-        // Generate new identity
         const { sk } = Feed.signPair()
         this._secret = sk
         await this.repo.writeReg(KEY_SK, sk)
@@ -191,6 +194,8 @@ class SimplePicoKernel {
     const mutated = await this.dispatch(feed, loudFail)
     return !!mutated.length
   }
+
+  $connections () { return this.rpc.$connections }
 
   /**
    * Convert Object to buffer

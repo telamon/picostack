@@ -7,6 +7,7 @@
 const Hub = require('piconet')
 const Feed = require('picofeed')
 const { pack, unpack } = require('msgpackr')
+const { write } = require('piconuro')
 
 // Message Types
 const OK = 0
@@ -33,17 +34,32 @@ class SimpleRPC {
   constructor (handlers) {
     // this.nodeId = randomBytes(8)
     this._controller = this._controller.bind(this)
-    this.hub = new Hub(this._controller, handlers.ondisconnect)
+    this.hub = new Hub(
+      (...a) => this._controller(...a),
+      (...a) => this._ondisconnect(...a)
+    )
     this.handlers = handlers
+
+    // Export connections neuron
+    const [$n, set] = write([])
+    this._setConnections = set
+    this.$connections = $n
   }
 
   spawnWire () {
     const plug = this.hub.createWire(hubEnd => {
+      // Internal 'onconnect'
+      this._setConnections(Array.from(this.hub._nodes))
       this.handlers
         .onconnect(hubEnd)
         ?.catch(err => console.error('Handshake failed', err))
     })
     return plug
+  }
+
+  _ondisconnect () {
+    this._setConnections(Array.from(this.hub._nodes))
+    this.handlers.ondisconnect()
   }
 
   async _controller (node, msg, replyTo) {
@@ -69,6 +85,21 @@ class SimpleRPC {
           this._uploadFeeds(replyTo, feeds)
             .catch(err => console.error('Failed uploading blocks', err))
         } break
+
+          // Prevent accidental duplicate peer connections
+          /* TODO:
+        case K_NODE_ID:
+          node.id = data
+          if (this.nodeIds[data]) {
+            this.nodeIds[data]++ // attempt counter
+            return node.close(new Error('DuplicatePeer')) // dedupe peers
+          }
+          this.nodeIds[data] = 1
+          D('NodeConnected %s', node.id)
+          if (this.handlers.onhandshake) this.handlers.onhandshake(node)
+          break
+          */
+
         default:
           throw new Error(`Unknown message type: ${type}`)
       }
@@ -97,6 +128,7 @@ class SimpleRPC {
 
   async query (node, params = {}) {
     const [msg, reply] = await node.postMessage(encodeMsg(QUERY, params), true)
+    if (decodeMsg(msg).type === OK) return // Empty reply
     // Let the controller handle the rest
     this._controller(node, msg, reply)
   }
