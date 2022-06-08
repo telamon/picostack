@@ -12,6 +12,8 @@ It allows you to build Progressive Web Apps that work completely without a serve
 
 > If you stash your entire Backend inside Frontend you get "Blockend".
 
+### [[live demo]](https://pico-todo.surge.sh/)
+
 ## core components
 
 - [picofeed](https://github.com/telamon/picofeed) Ultra-portable secure feed/chain-of-blocks
@@ -31,8 +33,6 @@ npx degit telamon/picostack-template my-project
 ```
 
 Check the `README.md` in the generated folder.
-
-[[live demo]](https://pico-todo.surge.sh/)
 
 ## usage
 
