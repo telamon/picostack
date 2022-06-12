@@ -1,6 +1,6 @@
 {
   "name": "picostack",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Minimal Web3.0 Framework",
   "main": "index.js",
   "scripts": {
@@ -26,11 +26,11 @@
     "tape": "^5.5.3"
   },
   "dependencies": {
-    "@telamon/picostore": "^1.6.2",
+    "@telamon/picostore": "^1.6.4",
     "piconet": "^3.1.1",
     "piconuro": "^1.0.0"
   },
   "peerDependencies": {
-    "picofeed": "^3.3.3"
+    "picofeed": "^3.4.0"
   }
 }
