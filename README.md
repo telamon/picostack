@@ -26,10 +26,10 @@ It allows you to build Progressive Web Apps that work completely without a serve
 
 ## Quickstart
 
-Use the [project template](https://github.com/telamon/picostack-template):
+Use the [project template](https://github.com/telamon/pico-template):
 
 ```bash
-npx degit telamon/picostack-template my-project
+npx degit telamon/pico-template my-project
 ```
 
 Check the `README.md` in the generated folder.
