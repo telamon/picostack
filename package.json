@@ -1,6 +1,6 @@
 {
   "name": "picostack",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Minimal Web3.0 Framework",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "test": "tape test.js",
     "modem": "browserify modem56.js -s Modem56 -o modem56.web.js",
     "debug": "node inspect $(npm bin)/tape test.js",
-    "prepublishOnly": "standard && test && modem"
+    "prepublishOnly": "standard && yarn test && yarn modem"
   },
   "repository": {
     "type": "git",
