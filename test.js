@@ -56,3 +56,60 @@ test('Prevent duplicate peer connections', async t => {
   ac = await until(alice.$connections(), v => v.length === 1)
   t.equal(ac.length, 1, 'Bob and alice reconnected')
 })
+
+// Prevent racing condition when one end generates blocks too fast.
+test('Ordered blockstream', async t => {
+  const alice = new CounterKernel(DB())
+  const bob = new CounterKernel(DB())
+  await alice.boot()
+  await bob.boot()
+  const plug = alice.spawnWire()
+
+  await alice.bump(0)
+  await bob.bump(1)
+
+  plug.open(bob.spawnWire())
+
+  await alice.bump(2)
+  await alice.bump(4)
+  await bob.bump(3)
+  await bob.bump(5)
+  await bob.bump(7)
+  const ax = await next(s => alice.store.on('x', s), 1)
+  const bx = await next(s => bob.store.on('x', s), 0)
+  t.deepEqual(ax, bx)
+})
+
+class CounterKernel extends SimpleKernel {
+  constructor (db) {
+    super(db)
+    this.store.register({
+      name: 'x',
+      initialValue: {},
+      filter ({ block, state }) {
+        const key = block.key.hexSlice(0, 4)
+        const { x } = SimpleKernel.decodeBlock(block.body)
+        if (x <= state[key]) return 'MustIncrement'
+      },
+      reducer ({ block, state }) {
+        const key = block.key.hexSlice(0, 4)
+        const { x } = SimpleKernel.decodeBlock(block.body)
+        state[key] = x
+        return state
+      }
+    })
+  }
+
+  async bump (x) {
+    const f = await this.createBlock('inc', { x })
+    return f.last.id
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+async function dump (repo, file) {
+  return require('picorepo/dot')
+    .dump(repo, file, {
+      blockLabel: block => SimpleKernel.decodeBlock(block.body).x
+    })
+}

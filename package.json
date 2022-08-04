@@ -38,11 +38,11 @@
     "tape": "^5.5.3"
   },
   "dependencies": {
-    "@telamon/picostore": "^1.7.0",
+    "@telamon/picostore": "^1.7.1",
     "msgpackr": "^1.7.0-alpha1",
     "picofeed": "^3.4.0",
     "piconet": "^3.1.1",
     "piconuro": "^1.0.0",
-    "picorepo": "^1.3.2"
+    "picorepo": "^1.3.3"
   }
 }

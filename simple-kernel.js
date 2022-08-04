@@ -20,6 +20,7 @@ class SimplePicoKernel {
     this.db = db
     this.repo = new Repo(db)
     this.store = new Store(this.repo, this.mergeStrategy.bind(this))
+    // this.store.mutexTimeout = 600000000
     this.ready = false
     this._secret = opts.secret ?? null
 
@@ -191,8 +192,25 @@ class SimplePicoKernel {
     // But in-case-of hairloss, override this method and
     // invoke: dispatch(feed, true)
     const loudFail = false
+    if (!feed.first.isGenesis) {
+      // Uncomment this to finish the query/resolve feature.
+      // const parentKnown = await this.repo._hasBlock(feed.first.parentSig)
+      // if (!parentKnown) return await this._networkResolveFeed(feed, loudFail)
+    }
+
     const mutated = await this.dispatch(feed, loudFail)
     return !!mutated.length
+  }
+
+  // Handles orphaned blocks by asking network
+  // for a sync-up
+  async _networkResolveFeed (feed, loudFail) {
+    // Except this is not how query works atm.
+    // const remote = await this.rpc.query({ resolve: feed.first.parentSig })
+    // if (!feed) return 0 // Give up
+    // remote.merge(feed)
+    // const mutated = await this.dispatch(remote, loudFail)
+    // return !!mutated.length
   }
 
   $connections () { return this.rpc.$connections }
