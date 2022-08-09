@@ -32,17 +32,16 @@
     "debug": "^4.3.4",
     "hypercore-protocol": "^8.0.7",
     "hyperswarm-web": "^2.2.0",
-    "levelup": "^5.1.1",
-    "memdown": "^6.1.1",
+    "memory-level": "^1.0.0",
     "standard": "^17.0.0",
     "tape": "^5.5.3"
   },
   "dependencies": {
-    "@telamon/picostore": "^1.7.1",
+    "@telamon/picostore": "^1.8.0",
     "msgpackr": "^1.7.0-alpha1",
     "picofeed": "^3.4.0",
     "piconet": "^3.1.1",
     "piconuro": "^1.0.0",
-    "picorepo": "^1.3.3"
+    "picorepo": "^1.4.0"
   }
 }

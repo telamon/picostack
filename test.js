@@ -1,6 +1,5 @@
 const test = require('tape')
-const levelup = require('levelup')
-const memdown = require('memdown')
+const { MemoryLevel } = require('memory-level')
 const { get, until, next } = require('piconuro')
 const {
   Feed,
@@ -9,7 +8,11 @@ const {
   SimpleKernel,
   SimpleRPC
 } = require('.')
-const DB = () => levelup(memdown())
+
+const DB = () => new MemoryLevel({
+  valueEncoding: 'buffer',
+  keyEncoding: 'buffer'
+})
 
 test('Exports something', t => {
   t.ok(Feed)
