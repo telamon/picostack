@@ -6,7 +6,7 @@
 ██     ██  ████  █████       Super Node
 ```
 
-> Pico-stack is a WEB3.0 framework
+> Pico-stack is a virtual p2p machine
 
 It allows you to build Progressive Web Apps that work completely without a server/backend/REST-API and without a central database.
 

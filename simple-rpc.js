@@ -83,10 +83,10 @@ class SimpleRPC {
         // Download blocks
         case BLOCKS:
           for await (const blocks of this._downloadFeeds(msg, replyTo)) {
-            const forward = await this.handlers.onblocks(blocks)
+            const patch = await this.handlers.onblocks(blocks)
             // Gossip if our store accepted the blocks
-            if (forward) {
-              this.shareBlocks(blocks, node) // second param prevents echo
+            if (patch) {
+              this.shareBlocks(patch, node) // second param prevents echo
                 .catch(err => console.error('Gossip failed', err))
             }
           }

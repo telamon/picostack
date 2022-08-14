@@ -183,23 +183,12 @@ class SimplePicoKernel {
    * RPC: when blocks are received
    * we simply dispatch them to the store.
    * They're 'mutations' =)
-   * Expects you to return a Boolean,
-   * if true then the feed will be forwarded
-   * to all other connected peers
+   * Returns feed to be forwarded to all connected peers
    */
   async onblocks (feed) {
-    // Bad blocks from remote should be silently ignored.
-    // But in-case-of hairloss, override this method and
-    // invoke: dispatch(feed, true)
     const loudFail = false
-    if (!feed.first.isGenesis) {
-      // Uncomment this to finish the query/resolve feature.
-      // const parentKnown = await this.repo._hasBlock(feed.first.parentSig)
-      // if (!parentKnown) return await this._networkResolveFeed(feed, loudFail)
-    }
-
     const mutated = await this.dispatch(feed, loudFail)
-    return !!mutated.length
+    return mutated.patch
   }
 
   // Handles orphaned blocks by asking network
@@ -215,6 +204,12 @@ class SimplePicoKernel {
 
   $connections () { return this.rpc.$connections }
 
+  async close () {
+    for (const sink of this.rpc.hub._nodes) {
+      this.rpc.hub.disconnect(sink)
+    }
+    await this.db.close()
+  }
   /**
    * Convert Object to buffer
    */

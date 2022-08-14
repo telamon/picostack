@@ -1,6 +1,6 @@
 const test = require('tape')
 const { MemoryLevel } = require('memory-level')
-const { get, until, next } = require('piconuro')
+const { get, until, next, combine, nfo, mute } = require('piconuro')
 const {
   Feed,
   Hub,
@@ -83,6 +83,40 @@ test('Ordered blockstream', async t => {
   t.deepEqual(ax, bx)
 })
 
+test.skip('Swarm eventually reaches the same state', async t => {
+  const size = 4
+  const nBumps = 10
+  const peers = []
+  let plug = null
+  for (let i = 0; i < size; i++) {
+    const k = new CounterKernel(DB())
+    await k.boot()
+    if (plug) plug.open(k.spawnWire())
+    plug = k.spawnWire()
+    peers.push(k)
+  }
+  plug.close()
+  await Promise.all(peers.map(async k => {
+    for (let i = 0; i < nBumps + 1; i++) await k.bump(i)
+  }))
+  t.pass('Bumps finished')
+  const target = size * size * nBumps
+  const $X = nfo(combine(peers.map(p => p.$x())))
+  const $version = mute($X, v =>
+    Object.values(v).reduce((sum, node) =>
+      sum + Object.values(node).reduce((s, n) =>
+        s + n, 0
+      ), 0
+    )
+  )
+  const res = await until($version, v => v === target)
+  t.equal(res, target, 'Sum reached target')
+  for (const k of peers) await k.close()
+  t.pass('Closed')
+  // Logic works but asynchronity leaks in this test,
+  // takes 30s to complete after last tap
+})
+
 class CounterKernel extends SimpleKernel {
   constructor (db) {
     super(db)
@@ -92,7 +126,7 @@ class CounterKernel extends SimpleKernel {
       filter ({ block, state }) {
         const key = block.key.hexSlice(0, 4)
         const { x } = SimpleKernel.decodeBlock(block.body)
-        if (x <= state[key]) return 'MustIncrement'
+        if (state[key] && x <= state[key]) return 'MustIncrement'
       },
       reducer ({ block, state }) {
         const key = block.key.hexSlice(0, 4)
@@ -102,6 +136,8 @@ class CounterKernel extends SimpleKernel {
       }
     })
   }
+
+  $x () { return s => this.store.on('x', s) }
 
   async bump (x) {
     const f = await this.createBlock('inc', { x })
