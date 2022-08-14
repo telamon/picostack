@@ -210,6 +210,7 @@ class SimplePicoKernel {
     }
     await this.db.close()
   }
+
   /**
    * Convert Object to buffer
    */
