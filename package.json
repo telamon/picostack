@@ -1,6 +1,6 @@
 {
   "name": "picostack",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Minimal Web3.0 Framework",
   "main": "index.js",
   "files": [
@@ -34,14 +34,14 @@
     "hyperswarm-web": "^2.2.0",
     "memory-level": "^1.0.0",
     "standard": "^17.0.0",
-    "tape": "^5.5.3"
+    "tape": "^5.6.0"
   },
   "dependencies": {
-    "@telamon/picostore": "^1.9.1",
-    "msgpackr": "^1.6.2",
+    "@telamon/picostore": "^1.9.2",
+    "msgpackr": "^1.7.0-alpha3",
     "picofeed": "^3.4.0",
     "piconet": "^3.1.1",
     "piconuro": "^1.0.0",
-    "picorepo": "^1.4.0"
+    "picorepo": "^1.4.3"
   }
 }
