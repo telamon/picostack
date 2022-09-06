@@ -38,10 +38,10 @@
   },
   "dependencies": {
     "@telamon/picostore": "^1.9.2",
-    "msgpackr": "^1.7.0-alpha3",
+    "msgpackr": "^1.7.0-alpha7",
     "picofeed": "^3.4.0",
     "piconet": "^3.1.1",
-    "piconuro": "^1.0.0",
+    "piconuro": "^1.0.1",
     "picorepo": "^1.4.3"
   }
 }
