@@ -16,7 +16,7 @@ const D = require('debug')('modem56')
  */
 class Modem56 {
   // Allow injection of a swarm instance,
-  // Modules known to export a compatible interface:
+  // Modules on npm known to export a compatible interface:
   // - hyperswarm
   // - hyperswarm-web
   // - hyper-simulator
@@ -27,6 +27,7 @@ class Modem56 {
     this._topic = null
     this._spawnWire = null
     this._onconnection = this._onconnection.bind(this)
+    this.swarm.on('error', err => console.error('[Modem56] swarm error: ', err.message))
   }
 
   join (topic, spawnWire) {
@@ -46,7 +47,6 @@ class Modem56 {
     this._spawnWire = spawnWire
     this._topic = topic
     this.swarm.on('connection', this._onconnection)
-    this.swarm.on('error', err => console.error('[Modem56] swarm error: ', err.message))
     return () => this.leave()
   }
 
@@ -65,7 +65,6 @@ class Modem56 {
   leave () {
     this.swarm.leave(this._topic)
     this.swarm.off('connection', this._onconnection)
-    this.swarm.off('error')
     this._topic = null
   }
 }

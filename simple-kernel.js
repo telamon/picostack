@@ -103,7 +103,10 @@ class SimplePicoKernel {
    */
   async dispatch (patch, loudFail = false) {
     this._checkReady()
-    return await this.store.dispatch(patch, loudFail)
+    const mut = await this.store.dispatch(patch, loudFail)
+    // Transmit accepted blocks on all wires
+    if (mut.length) this.rpc.shareBlocks(mut.patch)
+    return mut
   }
 
   /**
@@ -128,8 +131,6 @@ class SimplePicoKernel {
 
     const mut = await this.dispatch(branch, true) // Dispatch blocks
     if (!mut.length) throw new Error('createBlock() failed: rejected by store')
-    // Transmit new block on all wires.
-    this.rpc.shareBlocks(branch.slice(-1))
     return branch
   }
 
