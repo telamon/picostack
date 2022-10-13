@@ -124,7 +124,6 @@ class SimpleRPC {
 
   // Shares blocks to all connected peers
   async shareBlocks (feeds, filter) {
-    console.log('shareBlocks()', feeds)
     if (Feed.isFeed(feeds)) feeds = [feeds]
     feeds = [...feeds]
     const first = feeds.shift()
