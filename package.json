@@ -1,6 +1,6 @@
 {
   "name": "picostack",
-  "version": "1.5.14",
+  "version": "1.5.15",
   "description": "Minimal Web3.0 Framework",
   "main": "index.js",
   "files": [
