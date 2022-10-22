@@ -37,7 +37,7 @@
     "tape": "^5.6.1"
   },
   "dependencies": {
-    "@telamon/picostore": "^2.0.4",
+    "@telamon/picostore": "^2.0.6",
     "msgpackr": "^1.7.0",
     "picofeed": "^3.4.1",
     "piconet": "^3.1.1",
