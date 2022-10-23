@@ -170,12 +170,22 @@ class SimplePicoKernel {
   async onquery (params) {
     // We'll just send the entire repo for now *shrug*
     const feeds = []
-    const heads = await this.repo.listHeads()
-    for (const { key } of heads) {
-      const f = await this.repo.loadHead(key)
-      // Tradeoff performance to reduce traffic
-      // if (f && !feeds.find(a => a.merge(f))) feeds.push(f) // what?
-      if (f) feeds.push(f)
+    if (this.repo.allowDetached) { // listFeeds()
+      const res = await this.repo.listFeeds()
+      for (const { value: chainId } of res) {
+        if (!Buffer.isBuffer(chainId)) {
+          console.error('ChainId borked', chainId)
+          continue
+        }
+        const feed = await this.repo.resolveFeed(chainId)
+        feeds.push(feed)
+      }
+    } else { // listHeads()
+      const heads = await this.repo.listHeads()
+      for (const { key } of heads) {
+        const f = await this.repo.loadHead(key)
+        if (f) feeds.push(f)
+      }
     }
     return feeds
   }
