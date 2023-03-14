@@ -34,13 +34,13 @@
     "hyperswarm-web": "^2.2.0",
     "memory-level": "^1.0.0",
     "standard": "^17.0.0",
-    "tape": "^5.6.1"
+    "tape": "^5.6.3"
   },
   "dependencies": {
     "@telamon/picostore": "^2.0.6",
-    "msgpackr": "^1.7.0",
-    "picofeed": "^3.4.1",
-    "piconet": "^3.1.1",
+    "msgpackr": "^1.8.5",
+    "picofeed": "^3.4.2",
+    "piconet": "^3.2.1",
     "piconuro": "^1.0.1",
     "picorepo": "^1.4.5"
   }
