@@ -4,18 +4,16 @@
  * Second is "query" which expects remote peer to respond with "blocks".
  * Feel free to copy and modify if you need something different. (AGPL)
  */
-const Hub = require('piconet')
-const Feed = require('picofeed')
-const { pack, unpack } = require('msgpackr')
-const { write } = require('piconuro')
+import Hub from 'piconet'
+import { Feed, au8 } from 'picofeed'
+import { encode, decode } from 'cborg'
+import { write } from 'piconuro'
 
-// const { randomBytes } = require('crypto')
-// TODO: is crypto.randomBytes() available in Browser?
-const randomBytes = n => Buffer.from(
-  Array.from(new Array(n))
-    // Not very random, used to generate a node-id
-    .map(_ => Math.floor(Math.random() * 256))
-)
+function randomBytes (n) {
+  const b = new Uint8Array(n)
+  globalThis.crypto.getRandomValues(b)
+  return b
+}
 
 // Message Types
 const OK = 0
@@ -24,7 +22,7 @@ const QUERY = 1
 const BLOCKS = 2
 const NODE_ID = 3
 
-class SimpleRPC {
+export default class SimpleRPC {
   /** Handlers spec:
    * {
    *    // When peer conects
@@ -186,7 +184,6 @@ class SimpleRPC {
     }
   }
 }
-module.exports = SimpleRPC
 
 function encodeMsg (type, obj) {
   let buffer = null
@@ -195,26 +192,27 @@ function encodeMsg (type, obj) {
       // TODO: Extend picofeed with official binary pickle support.
       if (!obj) throw new Error('Feed expected')
       obj = Feed.from(obj)
-      buffer = Buffer.alloc(obj.tail + 1)
+      buffer = new Uint8Array(obj.tail + 1)
+      debugger
       obj.buf.copy(buffer, 1, 0, obj.tail)
       break
 
     // Serialize signals
     case ERR:
     case OK:
-      buffer = Buffer.alloc(1)
+      buffer = new Uint8Array(1)
       break
 
-    // Serialize msgpack messages
+    // Serialize msgencode messages
     case QUERY: {
-      const data = pack(obj)
-      buffer = Buffer.alloc(data.length + 1)
-      data.copy(buffer, 1)
+      const data = encode(obj)
+      buffer = new Uint8Array(data.length + 1)
+      buffer.set(data, 1)
     } break
 
     case NODE_ID:
-      buffer = Buffer.alloc(8 + 1)
-      obj.copy(buffer, 1)
+      buffer = new Uint8Array(8 + 1)
+      buffer.set(obj, 1)
       break
 
     default:
@@ -225,20 +223,17 @@ function encodeMsg (type, obj) {
 }
 
 function typeOfMsg (buffer) {
-  if (!Buffer.isBuffer(buffer)) throw new Error('BufferExpected')
+  au8(buffer)
   return buffer[0]
 }
 
 function decodeMsg (buffer) {
-  if (!Buffer.isBuffer(buffer)) throw new Error('BufferExpected')
+  au8(buffer)
   const type = typeOfMsg(buffer)
   let data = null
   switch (type) {
     case BLOCKS:
-      // TODO: Feed.from(buffer) in picofeed
-      data = new Feed()
-      data.buf = buffer.slice(1)
-      data.tail = buffer.length - 1
+      data = Feed.from(buffer)
       break
 
     // deserialize signals
@@ -249,13 +244,13 @@ function decodeMsg (buffer) {
       data = 'ERROR'
       break
 
-    // deserialize msgpack messages
+    // deserialize msgencode messages
     case QUERY:
-      data = unpack(buffer.slice(1))
+      data = decode(buffer.subarray(1))
       break
 
     case NODE_ID:
-      data = buffer.slice(1, 9)
+      data = buffer.subarray(1, 9)
       break
 
     default:

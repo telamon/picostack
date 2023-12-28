@@ -1,17 +1,20 @@
-const test = require('tape')
-const { MemoryLevel } = require('memory-level')
-const { get, until, next, combine, nfo, mute } = require('piconuro')
-const {
+import { test, solo } from 'brittle'
+import { MemoryLevel } from 'memory-level'
+import { get, until, next, combine, nfo, mute } from 'piconuro'
+import {
   Feed,
   Hub,
   Store,
   SimpleKernel,
   SimpleRPC
-} = require('.')
+} from './index.js'
+import { webcrypto } from 'node:crypto'
+// shim for test.js and node processes
+if (!globalThis.crypto) globalThis.crypto = webcrypto
 
 const DB = () => new MemoryLevel({
-  valueEncoding: 'buffer',
-  keyEncoding: 'buffer'
+  valueEncoding: 'view',
+  keyEncoding: 'view'
 })
 
 test('Exports something', t => {
@@ -23,21 +26,23 @@ test('Exports something', t => {
   t.end()
 })
 
-test('SimpleKernel.$connections neuron', async t => {
+solo('SimpleKernel.$connections neuron', async t => {
   const a = new SimpleKernel(DB())
   const b = new SimpleKernel(DB())
+  await a.boot()
+  await b.boot()
   let c = get(a.$connections())
-  t.equal(c.length, 0, 'No connections')
+  t.is(c.length, 0, 'No connections')
   const plug = a.spawnWire()
   plug.open(b.spawnWire())
   await until(a.$connections(), v => v.length === 1)
   t.pass('Subscription fired')
   c = get(a.$connections()) // test sync value
-  t.equal(c.length, 1, 'One connection')
+  t.is(c.length, 1, 'One connection')
   plug.close() // Errors logged here are due to disrupted handshake
   c = await until(a.$connections(), v => v.length === 0)
   t.pass('Subscription fired')
-  t.equal(c.length, 0, 'Zero connections')
+  t.is(c.length, 0, 'Zero connections')
 })
 
 test('Prevent duplicate peer connections', async t => {

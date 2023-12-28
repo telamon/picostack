@@ -117,6 +117,20 @@ effort and time.
  |.________________________________________________|
 ```
 
+## ZEN.md
+
+Word of advice to the brave, this code was written mainly during tired off-hours,
+it is intristically minimalistic and mostly dependency free.
+
+Best code, no code:
+
+- standard - no semis
+- spaces until tabs.
+- Uint8Array > Buffer
+- JSDoc types on plebic APIs
+
+That's it.. sorry.
+
 ## License
 
 [AGPL-3.0-or-later](./LICENSE)

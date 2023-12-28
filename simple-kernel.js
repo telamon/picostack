@@ -1,20 +1,20 @@
 // Kernel includes
-const Repo = require('picorepo')
-const Store = require('@telamon/picostore')
-const Feed = require('picofeed')
-const { pack, unpack } = require('msgpackr')
-const SimpleRPC = require('./simple-rpc')
-const KEY_SK = 'reg/sk'
+import { Repo } from 'picorepo'
+import Store from '@telamon/picostore'
+import { Feed, getPublicKey, s2b } from 'picofeed'
+import { encode, decode } from 'cborg'
+import SimpleRPC from './simple-rpc.js'
+const KEY_SK = s2b('reg/sk')
 
 /* This is a simple but complete pico-kernel,
  * It sets up a user-identity, store and rpc.
- * It uses msgpack as block-encoder and also injects
+ * It uses cbor as block-encoder and also injects
  * sequence-number, type and timestamp props into each block.
  *
  * If you need something more advanced feel free to
  * fork off and hack. <3
  */
-class SimplePicoKernel {
+export default class SimplePicoKernel {
   constructor (db, opts = {}) {
     // Setup store
     this.db = db
@@ -37,7 +37,7 @@ class SimplePicoKernel {
    * Returns user's public key (same thing as userId)
    */
   get pk () {
-    return this._secret?.slice(32)
+    return getPublicKey(this._secret)
   }
 
   async boot () {
@@ -226,7 +226,7 @@ class SimplePicoKernel {
    * Convert Object to buffer
    */
   static encodeBlock (type, seq, payload) {
-    return pack({
+    return encode({
       ...payload,
       type,
       seq,
@@ -238,7 +238,7 @@ class SimplePicoKernel {
    * Converts buffer to Object
    */
   static decodeBlock (body) {
-    return unpack(body)
+    return decode(body)
   }
 
   /**
@@ -248,5 +248,3 @@ class SimplePicoKernel {
     return SimplePicoKernel.decodeBlock(body).type
   }
 }
-
-module.exports = SimplePicoKernel

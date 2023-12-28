@@ -1,25 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-const Feed = require('picofeed')
-const Store = require('@telamon/picostore')
-const Hub = require('piconet')
-const SimpleKernel = require('./simple-kernel')
-const SimpleRPC = require('./simple-rpc')
-const Repo = require('picorepo')
+import { Feed } from 'picofeed'
+import Store from '@telamon/picostore'
+import Hub from 'piconet'
+import SimpleKernel from './simple-kernel.js'
+import SimpleRPC from './simple-rpc.js'
+import { Repo } from 'picorepo'
 const { decodeBlock, encodeBlock } = SimpleKernel
-const n = require('piconuro')
+import * as n from 'piconuro'
 
 /**
  * Attempted to flatten dependency tree
  * by setting all sub-module deps as peer-deps
  * and using this package as final version control.
- *
- * Thus exporting all sub-modules here to let
- * application avoid dep management..
- * But require/import resolves to sub-mod deps anyway i think,
- * unecessary exports?
- * I don't know. help!
  */
-module.exports = {
+export {
   // Necessary Exports
   Feed,
   SimpleKernel,

@@ -1,7 +1,8 @@
 {
   "name": "picostack",
-  "version": "1.5.17",
-  "description": "Minimal Web3.0 Framework",
+  "type": "module",
+  "version": "2.0.0",
+  "description": "Minimal Web8 Framework",
   "main": "index.js",
   "files": [
     "index.js",
@@ -12,9 +13,9 @@
   ],
   "scripts": {
     "lint": "standard",
-    "test": "tape test.js",
+    "test": "node test.js",
     "modem": "browserify modem56.js -s Modem56 -o modem56.web.js",
-    "debug": "node inspect $(npm bin)/tape test.js",
+    "debug": "node inspect test.js",
     "prepublishOnly": "standard && yarn test && yarn modem"
   },
   "repository": {
@@ -28,20 +29,20 @@
   },
   "homepage": "https://github.com/telamon/picostack",
   "devDependencies": {
+    "brittle": "^3.3.2",
     "browserify": "^17.0.0",
     "debug": "^4.3.4",
     "hypercore-protocol": "^8.0.7",
     "hyperswarm-web": "^2.2.0",
     "memory-level": "^1.0.0",
-    "standard": "^17.0.0",
-    "tape": "^5.6.3"
+    "standard": "^17.1.0"
   },
   "dependencies": {
-    "@telamon/picostore": "^2.0.6",
-    "msgpackr": "^1.8.5",
-    "picofeed": "^3.4.2",
+    "@telamon/picostore": "../picostore",
+    "cborg": "^4.0.5",
+    "picofeed": "^5.0.1",
     "piconet": "^3.2.1",
     "piconuro": "^1.0.1",
-    "picorepo": "^1.4.5"
+    "picorepo": "^2.1.1"
   }
 }
