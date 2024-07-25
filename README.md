@@ -8,21 +8,23 @@
 
 > If you stash your entire Backend inside Frontend you get "Blockend".
 
-This is a toolkit to build p2p application cores, using emepheral states.  
+This is a toolkit to build P2P application cores, using _emepheral_ states.  
 
 Why do we need yet another consensus engine in 202x?  
-Well this one provides a non-token based solution to decentralization _(and also it runs in frontend/-user device with finite resources)_.  
+Well this one provides a non-token based approach to decentralization _(and also it runs in frontend/-user device with finite resources)_.  
 
-In a picosphere nothing is permanent, blocks dissapear, chains corrupt,
-states across nodes differ - but all states are valid.  
-In "bc"-terms picostack an intricate mempool giving you fine control over: computing states that "could be".
+**The General Idea**  
+In a picoverse nothing is permanent, blocks dissapear, chains corrupt,
+states across nodes differ.  
+The global state exists but is considered "non computable", so each node attempts to gather and forward as many valid block sequences as it can hold, discarding lesser along the way.  
+In bc-terms pico could be called an intricate mempool that gives you fine control over computing states that "could be".
 
 
 This kit exposes a higher level API to quickly design and test what ever consensus
 you imagine.  
 If you stumble on a local state that you wish to persist as truth, you can of course 
-copy the picofeeds to what ever medium you like.  
-Their format is binary and quite space-efficient.
+copy the pico-blocks to what ever medium you like.  
+Their format is binary and _quite_ space-efficient.
 
 
 **Update 2024**
