@@ -1,34 +1,34 @@
 ```
  _ __  (_)  ___  ___   ___ | |_  __ _   ___ | | __
 | '_ \ | | / __|/ _ \ / __|| __|/ _` | / __|| |/ /
-| |_) || || (__| (_) |\__ \| |_| (_| || (__ |   < 
+| |_) || || (__| (_) |\__ \| |_| (_| || (__ |   <
 | .__/ |_| \___|\___/ |___/ \__|\__,_| \___||_|\_\
 |_|  network without super node
 ```
 
 > If you stash your entire Backend inside Frontend you get "Blockend".
 
-This is a toolkit to build P2P application cores, using _emepheral_ states.  
+This is a toolkit to build P2P application cores, using _emepheral_ states.
 
-Why do we need yet another consensus engine in 202x?  
-Well this one provides a non-token based approach to decentralization _(and also it runs in frontend/-user device with finite resources)_.  
+Why do we need yet another consensus engine in 202x?
+Well this one provides a non-token based approach to decentralization _(and also it runs in frontend/-user device with finite resources)_.
 
-**The General Idea**  
+**The General Idea**
 In a picoverse nothing is permanent, blocks dissapear, chains corrupt,
-states across nodes differ.  
-The global state exists but is considered "non computable", so each node attempts to gather and forward as many valid block sequences as it can hold, discarding lesser along the way.  
+states across nodes differ.
+The global state exists but is considered "non computable", so each node attempts to gather and forward as many valid block sequences as it can hold, discarding lesser along the way.
 In bc-terms pico could be called an intricate mempool that gives you fine control over computing states that "could be".
 
 
 This kit exposes a higher level API to quickly design and test what ever consensus
-you imagine.  
-If you stumble on a local state that you wish to persist as truth, you can of course 
-copy the pico-blocks to what ever medium you like.  
+you imagine.
+If you stumble on a local state that you wish to persist as truth, you can of course
+copy the pico-blocks to what ever medium you like.
 Their format is binary and _quite_ space-efficient.
 
 
 **Update 2024**
-After _a lot_ of iterations picostore 3.x is starting to emerge.  
+After _a lot_ of iterations picostore 3.x is starting to emerge.
 In hindsight I would have liked to rename some components like `stack => core-kit` and `store => block-engine`,
 it makes more sense.
 
