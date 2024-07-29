@@ -1,11 +1,11 @@
 /**
- * This RPC has 2 remote procedure calls.
+ * This RPC has 2 remote procedures.
  * First is "blocks" which sends one-or-more feeds to remote peer.
  * Second is "query" which expects remote peer to respond with "blocks".
  * Feel free to copy and modify if you need something different. (AGPL)
  */
 import Hub from 'piconet'
-import { Feed, au8 } from 'picofeed'
+import { Feed, au8, cmp, hexdump, feedFrom } from 'picofeed'
 import { encode, decode } from 'cborg'
 import { write } from 'piconuro'
 
@@ -22,7 +22,7 @@ const QUERY = 1
 const BLOCKS = 2
 const NODE_ID = 3
 
-export default class SimpleRPC {
+export class SimpleRPC {
   /** Handlers spec:
    * {
    *    // When peer conects
@@ -101,7 +101,7 @@ export default class SimpleRPC {
         case NODE_ID:
           // Prevent accidental duplicate peer connections
           for (const n of this.hub._nodes) {
-            if (Buffer.isBuffer(n.id) && n.id.equals(data)) {
+            if (n.id && cmp(n.id, data)) {
               // Ignore dupe-ack error handling as conection is about
               // to be killed anyway
               replyTo(encodeMsg(ERR))
@@ -148,9 +148,7 @@ export default class SimpleRPC {
   // Recursively uploads feeds until array
   // is empty or aborted by remote peer
   _uploadFeeds (sink, feeds) {
-    if (!feeds || !feeds.length) {
-      return sink(encodeMsg(OK))
-    }
+    if (!feeds?.length) return sink(encodeMsg(OK))
     const remaining = [...feeds]
     const current = remaining.shift()
     return sink(encodeMsg(BLOCKS, current), !!remaining.length)
@@ -189,12 +187,10 @@ function encodeMsg (type, obj) {
   let buffer = null
   switch (type) {
     case BLOCKS:
-      // TODO: Extend picofeed with official binary pickle support.
       if (!obj) throw new Error('Feed expected')
       obj = Feed.from(obj)
       buffer = new Uint8Array(obj.tail + 1)
-      debugger
-      obj.buf.copy(buffer, 1, 0, obj.tail)
+      buffer.set(obj.buffer, 1)
       break
 
     // Serialize signals
@@ -233,7 +229,7 @@ function decodeMsg (buffer) {
   let data = null
   switch (type) {
     case BLOCKS:
-      data = Feed.from(buffer)
+      data = feedFrom(buffer.subarray(1), false)
       break
 
     // deserialize signals
@@ -244,7 +240,7 @@ function decodeMsg (buffer) {
       data = 'ERROR'
       break
 
-    // deserialize msgencode messages
+    // deserialize messages
     case QUERY:
       data = decode(buffer.subarray(1))
       break

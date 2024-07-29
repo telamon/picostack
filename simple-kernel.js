@@ -1,28 +1,49 @@
 // Kernel includes
 import { Repo } from 'picorepo'
-import Store from '@telamon/picostore'
-import { Feed, getPublicKey, s2b } from 'picofeed'
-import { encode, decode } from 'cborg'
-import SimpleRPC from './simple-rpc.js'
+import { Memory, Engine as Store } from '@telamon/picostore'
+import { Feed, getPublicKey, s2b, toU8, feedFrom } from 'picofeed'
+// import { encode, decode } from 'cborg'
+import { SimpleRPC } from './simple-rpc.js'
 const KEY_SK = s2b('reg/sk')
+
+/**
+ * @typedef {import('picofeed').SecretKey} SecretKey
+ * @typedef {import('picofeed').PublicHex} PublicHex
+ */
 
 /* This is a simple but complete pico-kernel,
  * It sets up a user-identity, store and rpc.
- * It uses cbor as block-encoder and also injects
- * sequence-number, type and timestamp props into each block.
  *
  * If you need something more advanced feel free to
  * fork off and hack. <3
  */
-export default class SimplePicoKernel {
+export class SimpleKernel {
+  ready = false
+  /** @type {SecretKey} */
+  _secret = null
+  /** @type {import('abstract-level').AbstractLevel<any,Uint8Array,Uint8Array>} */
+  db = null
+  /** @type {Store} */
+  store = null
+  /** @type {SimpleRPC} */
+  rpc = null
+
+  /**
+   * @param {import('abstract-level').AbstractLevel<any,Uint8Array,Uint8Array} db Datastore
+   * @param {{ secret?: SecretBin }} opts Options
+   */
   constructor (db, opts = {}) {
     // Setup store
     this.db = db
     this.repo = new Repo(db)
-    this.store = new Store(this.repo, this.mergeStrategy.bind(this))
+
+    this.store = new Store(this.repo, {
+      strategy: this.mergeStrategy.bind(this)
+    })
+    this.store.tap(this._onstoreevent.bind(this))
+
     // this.store.mutexTimeout = 600000000
-    this.ready = false
-    this._secret = opts.secret ?? null
+    this._secret = opts.secret ? toU8(opts.secret) : null
 
     // Setup network
     this.rpc = new SimpleRPC({
@@ -35,13 +56,20 @@ export default class SimplePicoKernel {
 
   /**
    * Returns user's public key (same thing as userId)
+   * @returns {PublicHex}
    */
   get pk () {
     return getPublicKey(this._secret)
   }
 
+  /**
+   * Generates/Restores user _secret and initializes store
+   * call boot after slice registrations and before
+   * network connections/dispatch.
+   */
   async boot () {
     if (this.__loading) return this.__loading
+    /// Master Asynchr0nos was here
     this.__loading = (async () => {
       // If identity wasn't provided via opts.
       if (!this._secret) {
@@ -70,17 +98,19 @@ export default class SimplePicoKernel {
    * PicoRepo: Default merge strategy restricts feeds
    * to only allow same-author blocks to be appended.
    * Override this method if you need different behavior.
+   * @type {import('picorepo').MergeStrategy}
    */
-  mergeStrategy (block, repo) {
+  async mergeStrategy (block, repo) {
     return false
   }
 
   /**
    * Returns user's feed
+   * @returns {Promise<Feed>}
    */
   async feed (limit = undefined) {
     this._checkReady()
-    return this.repo.loadHead(this.pk)
+    return this.repo.loadHead(this.pk, limit)
   }
 
   _checkReady () {
@@ -88,13 +118,15 @@ export default class SimplePicoKernel {
   }
 
   /**
-   * Returns the last block number of user
-   * Block sequence starts from 0 and increments by 1 for each new user-block
+   * Returns user's feed current blockheight
    */
   async seq () {
+    return 0 // await this.feed(1).seq
+    /* TODO: move to formal header
     const feed = await this.feed(1)
     if (!feed) return -1
-    return SimplePicoKernel.decodeBlock(feed.last.body).seq
+    return decode(feed.last.body).seq
+    */
   }
 
   /**
@@ -103,35 +135,40 @@ export default class SimplePicoKernel {
    */
   async dispatch (patch, loudFail = false) {
     this._checkReady()
-    const mut = await this.store.dispatch(patch, loudFail)
+    return await this.store.dispatch(patch, loudFail)
+    // TODO: this.store.tap(observer) taps into merged blocks, but there are tradeoffs... let's weight them.
     // Transmit accepted blocks on all wires
-    if (mut.length) this.rpc.shareBlocks(mut.patch)
-    return mut
+    // if (patch?.length) this.rpc.shareBlocks(patch)
+    // return patch
+  }
+
+  /** @type {(name: string) => Memory} */
+  collection (name) {
+    if (!(name in this.store.roots)) throw new Error(`No such collection: ${name}, did you register it?`)
+    return this.store.roots[name]
   }
 
   /**
    * Creates a new block on parent feed and dispatches it to store
    *
-   * - branch {Feed} the parent feed, OPTIONAL! defaults to user's private feed.
-   * - type {string} (block-type: 'profile' | 'box' | 'message')
-   * - payload {object} The data contents
+   * @param {Feed} [branch] Target feed, defaults to user's private feed.
+   * @param {string} collection Name of store-collection
+   * @param {object} payload Block contents
    * returns list of modified stores
    */
-  async createBlock (branch, type, payload) {
-    if (typeof branch === 'string') return this.createBlock(null, branch, type)
+  async createBlock (branch, root, payload) {
+    if (typeof branch === 'string') return this.createBlock(null, branch, root)
     this._checkReady() // Abort if not ready
 
     // Use provided branch or fetch user's feed
     // if that also fails then initialize a new empty Feed.
     branch = branch || (await this.feed()) || new Feed()
 
-    const seq = (await this.seq()) + 1 // Increment block sequence
-    const data = SimplePicoKernel.encodeBlock(type, seq, payload) // Pack data into string/buffer
-    branch.append(data, this._secret) // Append data on selected branch
+    // TODO: Move SEQ as an optional builtin feature in picofeed
+    // const seq = (await this.seq()) + 1 // Increment block sequence
 
-    const mut = await this.dispatch(branch, true) // Dispatch blocks
-    if (!mut.length) throw new Error('createBlock() failed: rejected by store')
-    return branch
+    const patch = await this.collection(root).createBlock(branch, payload, this._secret)
+    return patch
   }
 
   /**
@@ -183,7 +220,7 @@ export default class SimplePicoKernel {
     } else { // listHeads()
       const heads = await this.repo.listHeads()
       for (const { key } of heads) {
-        const f = await this.repo.loadHead(key)
+        const f = await this.repo.loadHead(toU8(key))
         if (f) feeds.push(f)
       }
     }
@@ -198,8 +235,8 @@ export default class SimplePicoKernel {
    */
   async onblocks (feed) {
     const loudFail = false
-    const mutated = await this.dispatch(feed, loudFail)
-    return mutated.patch
+    const patch = await this.dispatch(feed, loudFail)
+    return patch
   }
 
   // Handles orphaned blocks by asking network
@@ -223,28 +260,21 @@ export default class SimplePicoKernel {
   }
 
   /**
-   * Convert Object to buffer
-   */
-  static encodeBlock (type, seq, payload) {
-    return encode({
-      ...payload,
-      type,
-      seq,
-      date: new Date().getTime()
-    })
-  }
-
-  /**
-   * Converts buffer to Object
-   */
-  static decodeBlock (body) {
-    return decode(body)
-  }
-
-  /**
+   * @deprecated,
    * Returns block's type as a string
-   */
   static typeOfBlock (body) {
-    return SimplePicoKernel.decodeBlock(body).type
+    return decode(body).type
+  }
+   */
+
+  /**
+   * Recieves events such as change|merged
+   * We simply take all 'merged' blocks and forward them onto
+   * the wire.
+   * @type {(event: string, payload: any) => void}
+   */
+  _onstoreevent (event, payload) {
+    // console.info(event, payload)
+    if (event === 'merged') this.rpc.shareBlocks(feedFrom(payload.block))
   }
 }
