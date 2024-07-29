@@ -232,6 +232,10 @@ export class SimpleKernel {
    */
   async onblocks (feed) {
     const loudFail = false
+    if (this.store.closed) {
+      console.warn('Dropped feed due Store closed', feed)
+      return
+    }
     const patch = await this.dispatch(feed, loudFail)
     return patch
   }
@@ -249,11 +253,11 @@ export class SimpleKernel {
 
   $connections () { return this.rpc.$connections }
 
-  async close () {
+  async halt () {
     for (const sink of this.rpc.hub._nodes) {
       this.rpc.hub.disconnect(sink)
     }
-    await this.db.close()
+    await this.store.close()
   }
 
   /**
@@ -268,16 +272,13 @@ export class SimpleKernel {
    * Recieves events such as change|merged
    * We simply take all 'merged' blocks and forward them onto
    * the wire.
-   * @type {(event: string, payload: any) => void}
+   * @type {(events: {event: string, payload: any}[]) => void}
    */
-  _onstoreevent (event, payload) {
-    // console.info(event, payload)
-    /*
-     * BIG TODO: store has store._onunlock array, which should
-     * be used to buffer all events during locked state and
-     * then dump all accepted blocks as a batch onto the wire.
-     */
-    // Major bottleneck/ slowdown
-    if (event === 'merged') this.rpc.shareBlocks(feedFrom(payload.block))
+  _onstoreevent (events) {
+    if (!events.length) return
+    const event = events.find(({ event }) => event === 'patch-merged')
+    if (event) {
+      this.rpc.shareBlocks(event.payload.patch)
+    }
   }
 }

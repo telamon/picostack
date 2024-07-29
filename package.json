@@ -23,7 +23,8 @@
     "type": "git",
     "url": "git://https://github.com/telamon/picostack"
   },
-  "author": "Tony Ivanov", "license": "AGPL-3.0-or-later",
+  "author": "Tony Ivanov",
+  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/telamon/picostack"
   },
@@ -36,14 +37,15 @@
     "hypercore-protocol": "^8.0.7",
     "hyperswarm-web": "^2.2.0",
     "memory-level": "^1.0.0",
-    "standard": "^17.1.0"
+    "standard": "^17.1.0",
+    "wtfnode": "^0.9.3"
   },
   "dependencies": {
-    "@telamon/picostore": "../picostore",
+    "@telamon/picostore": "3.0.2",
     "cborg": "^4.2.3",
-    "picofeed": "^8.0.3",
-    "piconet": "^3.2.1",
+    "picofeed": "^8.0.5",
+    "piconet": "^3.2.2",
     "piconuro": "^1.0.1",
-    "picorepo": "^2.2.3"
+    "picorepo": "^2.2.5"
   }
 }

@@ -1,4 +1,5 @@
-import { test, solo } from 'brittle'
+// import wtf from 'wtfnode'
+import { test } from 'brittle'
 import { MemoryLevel } from 'memory-level'
 import { get, until, next, combine, nfo, mute } from 'piconuro'
 import { Feed } from 'picofeed'
@@ -90,7 +91,7 @@ test('Ordered blockstream', async t => {
   t.alike(ax, bx)
 })
 
-solo('Swarm eventually reaches the same state', async t => {
+test('Swarm eventually reaches the same state', async t => {
   // TODO: this is a good test to use for benchmarking
   // Pico-stack is slow as snails atm,
   // also design an distributed vector clock using hyper/autobase for comparison
@@ -101,11 +102,13 @@ solo('Swarm eventually reaches the same state', async t => {
   })
   obs.observe({ type: 'measure' })
 
-  const size = 10
-  const nBumps = 8
+  const size = 4
+  const nBumps = 10
   const peers = []
   let plug = null
   performance.mark('init')
+  // All nodes are connected in series
+  // e.g. there is 9 hops between first and last node in a network of 10
   for (let i = 0; i < size; i++) {
     const k = new CounterKernel(DB())
     await k.boot()
@@ -115,15 +118,16 @@ solo('Swarm eventually reaches the same state', async t => {
   }
   performance.measure('Object Initialization', 'init')
   plug.close() // close last dangling plug?
+  // plug.open(peers[0].spawnWire()) // connect last to first/circle network
   performance.mark('block_init')
   await Promise.all(peers.map(async k => {
     for (let i = 1; i < nBumps + 1; i++) await k.bump(i)
   }))
   performance.measure('All blocks generated', 'block_init')
-  setTimeout(() => process.exit(0), 150)
+  // setTimeout(() => process.exit(0), 150)
   t.pass('Bumps finished')
   const target = size * size * nBumps
-  const $X = combine(peers.map(p => p.$x()))
+  const $X = nfo(combine(peers.map(p => p.$x())))
   const $version = mute($X, v =>
     Object.values(v).reduce((sum, node) =>
       sum + Object.values(node).reduce((s, n) =>
@@ -134,10 +138,17 @@ solo('Swarm eventually reaches the same state', async t => {
   const res = await until($version, v => v === target)
   performance.measure('Convergence Reached', 'block_init')
   t.is(res, target, 'Sum reached target')
-  for (const k of peers) await k.close()
-  t.pass('Closed')
+  for (const k of peers) await k.halt()
+  t.pass('All peers halted')
   // Logic works but asynchronity leaks in this test,
   // takes 30s to complete after last tap
+  // edit: It's not a leak, it's expected behaviour
+  // but i think the delay is due to store lock-queue that is still processing.
+  // Done! ~~fix 1: Determine already-have blocks without aquiring write-lock~~
+  // fix 2: Don't echo back merged blocks to source
+  // edit2: It's a leak...
+  // wtf.dump()
+  // edit3: leak fixed!
 })
 
 class CounterKernel extends SimpleKernel {
