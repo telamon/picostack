@@ -7,7 +7,7 @@ import { Memory, Store } from '@telamon/picostore'
 import { Hub } from 'piconet'
 import {
   SimpleKernel,
-  SimpleRPC,
+  SimpleRPC
 } from './index.js'
 import { performance, PerformanceObserver } from 'node:perf_hooks'
 import { webcrypto } from 'node:crypto'
@@ -96,7 +96,7 @@ test('Swarm eventually reaches the same state', async t => {
   // Pico-stack is slow as snails atm,
   // also design an distributed vector clock using hyper/autobase for comparison
   const obs = new PerformanceObserver(items => {
-    console.log(`perf:`,items.getEntries())
+    console.log('perf:', items.getEntries())
     // performance.clearMarks()
     // performance.clearMeasures()
   })

@@ -1,7 +1,7 @@
 // Kernel includes
 import { Repo } from 'picorepo'
-import { Memory, Store } from '@telamon/picostore'
-import { Feed, getPublicKey, s2b, toU8, feedFrom, au8 } from 'picofeed'
+import { Store } from '@telamon/picostore'
+import { Feed, getPublicKey, s2b, toU8, au8 } from 'picofeed'
 // import { encode, decode } from 'cborg'
 import { SimpleRPC } from './simple-rpc.js'
 const KEY_SK = s2b('reg/sk')
@@ -141,7 +141,8 @@ export class SimpleKernel {
     // return patch
   }
 
-  /** @type {(name: string) => Memory} */
+  /** @typedef {import('@telamon/picostore').Memory} Memory
+    * @type {(name: string) => Memory} */
   collection (name) {
     if (!(name in this.store.roots)) throw new Error(`No such collection: ${name}, did you register it?`)
     return this.store.roots[name]

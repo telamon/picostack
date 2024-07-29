@@ -1,17 +1,20 @@
 {
   "name": "picostack",
   "type": "module",
-  "version": "3.0.0",
+  "version": "2.0.0",
   "description": "Minimal Web8 Framework",
   "main": "index.js",
   "files": [
     "index.js",
+    "index.d.ts",
     "simple-kernel.js",
+    "simple-kernel.d.ts",
     "simple-rpc.js",
+    "simple-rpc.d.ts",
     "modem56.js"
   ],
   "scripts": {
-    "lint": "standard",
+    "lint": "standard --fix",
     "test": "node test.js",
     "modem": "browserify modem56.js -s Modem56 -o modem56.web.js",
     "debug": "node inspect test.js",

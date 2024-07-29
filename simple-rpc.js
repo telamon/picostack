@@ -5,7 +5,7 @@
  * Feel free to copy and modify if you need something different. (AGPL)
  */
 import Hub from 'piconet'
-import { Feed, au8, cmp, hexdump, feedFrom } from 'picofeed'
+import { Feed, au8, cmp, feedFrom } from 'picofeed'
 import { encode, decode } from 'cborg'
 import { write } from 'piconuro'
 
