@@ -1,14 +1,15 @@
 // Kernel includes
 import { Repo } from 'picorepo'
-import { Memory, Engine as Store } from '@telamon/picostore'
-import { Feed, getPublicKey, s2b, toU8, feedFrom } from 'picofeed'
+import { Memory, Store } from '@telamon/picostore'
+import { Feed, getPublicKey, s2b, toU8, feedFrom, au8 } from 'picofeed'
 // import { encode, decode } from 'cborg'
 import { SimpleRPC } from './simple-rpc.js'
 const KEY_SK = s2b('reg/sk')
 
 /**
- * @typedef {import('picofeed').SecretKey} SecretKey
+ * @typedef {import('picofeed').SecretBin} SecretBin
  * @typedef {import('picofeed').PublicHex} PublicHex
+ * @typedef {import('picorepo').BinaryLevel} BinaryLevel
  */
 
 /* This is a simple but complete pico-kernel,
@@ -19,9 +20,9 @@ const KEY_SK = s2b('reg/sk')
  */
 export class SimpleKernel {
   ready = false
-  /** @type {SecretKey} */
+  /** @type {null|SecretBin} */
   _secret = null
-  /** @type {import('abstract-level').AbstractLevel<any,Uint8Array,Uint8Array>} */
+  /** @type {BinaryLevel} */
   db = null
   /** @type {Store} */
   store = null
@@ -29,19 +30,17 @@ export class SimpleKernel {
   rpc = null
 
   /**
-   * @param {import('abstract-level').AbstractLevel<any,Uint8Array,Uint8Array} db Datastore
+   * @param {BinaryLevel} db Datastore
    * @param {{ secret?: SecretBin }} opts Options
    */
   constructor (db, opts = {}) {
     // Setup store
     this.db = db
     this.repo = new Repo(db)
-
     this.store = new Store(this.repo, {
       strategy: this.mergeStrategy.bind(this)
     })
     this.store.tap(this._onstoreevent.bind(this))
-
     // this.store.mutexTimeout = 600000000
     this._secret = opts.secret ? toU8(opts.secret) : null
 
@@ -75,7 +74,7 @@ export class SimpleKernel {
       if (!this._secret) {
         try {
           // Attempt to restore existing identity
-          this._secret = await this.repo.readReg(KEY_SK)
+          this._secret = (await this.repo.readReg(KEY_SK) || null)
         } catch (err) {
           if (!err.notFound) throw err
         }
@@ -84,7 +83,7 @@ export class SimpleKernel {
       // Fallback to generate new identity
       if (!this._secret) {
         const { sk } = Feed.signPair()
-        this._secret = sk
+        this._secret = au8(toU8(sk), 32)
         await this.repo.writeReg(KEY_SK, sk)
       }
 
@@ -151,13 +150,12 @@ export class SimpleKernel {
   /**
    * Creates a new block on parent feed and dispatches it to store
    *
-   * @param {Feed} [branch] Target feed, defaults to user's private feed.
-   * @param {string} collection Name of store-collection
+   * @param {string} root Name of store-collection
    * @param {object} payload Block contents
-   * returns list of modified stores
+   * @param {Feed} [branch] Target feed, defaults to user's private feed.
+   * @returns {Promise<Feed>} patch
    */
-  async createBlock (branch, root, payload) {
-    if (typeof branch === 'string') return this.createBlock(null, branch, root)
+  async createBlock (root, payload, branch) {
     this._checkReady() // Abort if not ready
 
     // Use provided branch or fetch user's feed
@@ -166,7 +164,6 @@ export class SimpleKernel {
 
     // TODO: Move SEQ as an optional builtin feature in picofeed
     // const seq = (await this.seq()) + 1 // Increment block sequence
-
     const patch = await this.collection(root).createBlock(branch, payload, this._secret)
     return patch
   }
@@ -204,13 +201,13 @@ export class SimpleKernel {
    * override friendly.
    * Expected to return a Feed or array of Feeds
    */
-  async onquery (params) {
+  async onquery (params, reply) {
     // We'll just send the entire repo for now *shrug*
     const feeds = []
     if (this.repo.allowDetached) { // listFeeds()
       const res = await this.repo.listFeeds()
       for (const { value: chainId } of res) {
-        if (!Buffer.isBuffer(chainId)) {
+        try { au8(chainId, 64) } catch {
           console.error('ChainId borked', chainId)
           continue
         }
@@ -275,6 +272,12 @@ export class SimpleKernel {
    */
   _onstoreevent (event, payload) {
     // console.info(event, payload)
+    /*
+     * BIG TODO: store has store._onunlock array, which should
+     * be used to buffer all events during locked state and
+     * then dump all accepted blocks as a batch onto the wire.
+     */
+    // Major bottleneck/ slowdown
     if (event === 'merged') this.rpc.shareBlocks(feedFrom(payload.block))
   }
 }

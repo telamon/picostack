@@ -2,13 +2,13 @@ import { test, solo } from 'brittle'
 import { MemoryLevel } from 'memory-level'
 import { get, until, next, combine, nfo, mute } from 'piconuro'
 import { Feed } from 'picofeed'
-import { Memory, Engine as Store } from '@telamon/picostore'
+import { Memory, Store } from '@telamon/picostore'
 import { Hub } from 'piconet'
 import {
   SimpleKernel,
   SimpleRPC,
 } from './index.js'
-
+import { performance, PerformanceObserver } from 'node:perf_hooks'
 import { webcrypto } from 'node:crypto'
 // shim for test.js and node processes
 if (!globalThis.crypto) globalThis.crypto = webcrypto
@@ -67,7 +67,7 @@ test('Prevent duplicate peer connections', async t => {
 })
 
 // Prevent racing condition when one end generates blocks too fast.
-solo('Ordered blockstream', async t => {
+test('Ordered blockstream', async t => {
   const alice = new CounterKernel(DB())
   const bob = new CounterKernel(DB())
   await alice.boot()
@@ -90,11 +90,22 @@ solo('Ordered blockstream', async t => {
   t.alike(ax, bx)
 })
 
-test.skip('Swarm eventually reaches the same state', async t => {
-  const size = 4
-  const nBumps = 10
+solo('Swarm eventually reaches the same state', async t => {
+  // TODO: this is a good test to use for benchmarking
+  // Pico-stack is slow as snails atm,
+  // also design an distributed vector clock using hyper/autobase for comparison
+  const obs = new PerformanceObserver(items => {
+    console.log(`perf:`,items.getEntries())
+    // performance.clearMarks()
+    // performance.clearMeasures()
+  })
+  obs.observe({ type: 'measure' })
+
+  const size = 10
+  const nBumps = 8
   const peers = []
   let plug = null
+  performance.mark('init')
   for (let i = 0; i < size; i++) {
     const k = new CounterKernel(DB())
     await k.boot()
@@ -102,13 +113,17 @@ test.skip('Swarm eventually reaches the same state', async t => {
     plug = k.spawnWire()
     peers.push(k)
   }
-  plug.close()
+  performance.measure('Object Initialization', 'init')
+  plug.close() // close last dangling plug?
+  performance.mark('block_init')
   await Promise.all(peers.map(async k => {
-    for (let i = 0; i < nBumps + 1; i++) await k.bump(i)
+    for (let i = 1; i < nBumps + 1; i++) await k.bump(i)
   }))
+  performance.measure('All blocks generated', 'block_init')
+  setTimeout(() => process.exit(0), 150)
   t.pass('Bumps finished')
   const target = size * size * nBumps
-  const $X = nfo(combine(peers.map(p => p.$x())))
+  const $X = combine(peers.map(p => p.$x()))
   const $version = mute($X, v =>
     Object.values(v).reduce((sum, node) =>
       sum + Object.values(node).reduce((s, n) =>
@@ -117,7 +132,8 @@ test.skip('Swarm eventually reaches the same state', async t => {
     )
   )
   const res = await until($version, v => v === target)
-  t.equal(res, target, 'Sum reached target')
+  performance.measure('Convergence Reached', 'block_init')
+  t.is(res, target, 'Sum reached target')
   for (const k of peers) await k.close()
   t.pass('Closed')
   // Logic works but asynchronity leaks in this test,
@@ -127,11 +143,10 @@ test.skip('Swarm eventually reaches the same state', async t => {
 class CounterKernel extends SimpleKernel {
   constructor (db) {
     super(db)
-
     this.store.register('x', class extends Memory {
       initialValue = 0
       compute (state, { AUTHOR, payload, reject }) {
-        console.log(AUTHOR.slice(0, 6), ':', state, '-->', payload)
+        // console.log(AUTHOR.slice(0, 6), ':', state, '-->', payload)
         if (state >= payload) return reject('must increment')
         return payload
       }

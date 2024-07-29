@@ -15,7 +15,7 @@
     "test": "node test.js",
     "modem": "browserify modem56.js -s Modem56 -o modem56.web.js",
     "debug": "node inspect test.js",
-    "types": "tsc  --emitDeclarationOnly --allowJs --skipLibCheck --checkJs --declaration --removeComments --lib es2022 --target es2022 --moduleResolution nodenext --module nodenext index.js",
+    "types": "(rm *.ts || true) && tsc --skipLibCheck --emitDeclarationOnly --allowJs --checkJs --declaration --removeComments --lib es2022 --target es2022 --moduleResolution nodenext --module nodenext index.js",
     "prepublishOnly": "standard && yarn test && yarn modem"
   },
   "types": "index.d.ts",
@@ -23,8 +23,7 @@
     "type": "git",
     "url": "git://https://github.com/telamon/picostack"
   },
-  "author": "Tony Ivanov",
-  "license": "AGPL-3.0-or-later",
+  "author": "Tony Ivanov", "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/telamon/picostack"
   },
@@ -40,11 +39,11 @@
     "standard": "^17.1.0"
   },
   "dependencies": {
-    "@telamon/picostore": "^3.0.0-rc0",
+    "@telamon/picostore": "../picostore",
     "cborg": "^4.2.3",
     "picofeed": "^8.0.3",
     "piconet": "^3.2.1",
     "piconuro": "^1.0.1",
-    "picorepo": "../picorepo"
+    "picorepo": "^2.2.3"
   }
 }
