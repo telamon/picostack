@@ -58,18 +58,15 @@ export class Modem56 {
 
   _onconnection (socket, details) {
     D('[Modem56] peer connected', details)
-    const { client } = details
     const plug = this._spawnWire(details)
     socket.on('error', err => console.error('[Modem56] socket error: ', err.message))
-    if (false) { // use noise encyption / protomux
-      const hyperProtocolStream = new ProtoStream(client) // ProtoStream is dead
-      socket.pipe(hyperProtocolStream).pipe(socket)
-      hyperProtocolStream.on('error', err => console.error('[Modem56] hyper-proto error: ', err.message))
-      const encryptionKey = this._topic
-      hyperWire(plug, hyperProtocolStream, encryptionKey)
-    } else {
-      streamWire(plug, socket)
-    }
+    // socket is nowadays pre-encrypted?
+    streamWire(plug, socket)
+    // const hyperProtocolStream = new ProtoStream(client) // ProtoStream is dead
+    // socket.pipe(hyperProtocolStream).pipe(socket)
+    // hyperProtocolStream.on('error', err => console.error('[Modem56] hyper-proto error: ', err.message))
+    // const encryptionKey = this._topic
+    // hyperWire(plug, hyperProtocolStream, encryptionKey)
   }
 
   leave () {
