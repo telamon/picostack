@@ -19,7 +19,7 @@
     "modem": "browserify modem56.js -s Modem56 -o modem56.web.js",
     "debug": "node inspect test.js",
     "types": "(rm *.ts || true) && tsc --skipLibCheck --emitDeclarationOnly --allowJs --checkJs --declaration --removeComments --lib es2022 --target es2022 --moduleResolution nodenext --module nodenext index.js",
-    "prepublishOnly": "standard && yarn test && yarn modem"
+    "prepublishOnly": "standard && npm test && npm run types"
   },
   "types": "index.d.ts",
   "repository": {
