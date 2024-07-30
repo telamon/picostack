@@ -1,8 +1,13 @@
-const hyperswarm = require('hyperswarm-web')
-const ProtoStream = require('hypercore-protocol')
-const crypto = require('crypto')
-const { hyperWire } = require('piconet')
-const D = require('debug')('modem56')
+// const hyperswarm = require('hyperswarm-web')
+// import ProtoStream from 'hypercore-protocol'
+import { streamWire } from 'piconet'
+import { s2b, toU8, au8, toHex } from 'picofeed'
+// const D = require('debug')('modem56')
+const D = (...args) => console.info('modem56', ...args)
+
+export async function hash (buffer, algo = 'sha-256') {
+  return toU8(await globalThis.crypto.subtle.digest(algo, au8(buffer)))
+}
 /*
  *  It's **beep** time!
  *     ~¤~
@@ -14,23 +19,24 @@ const D = require('debug')('modem56')
  * Code scavenged from PoH in an attempt to make it easy to connect
  * to a swarm and use the piconet-hyperwire protocol.
  */
-class Modem56 {
+export class Modem56 {
   // Allow injection of a swarm instance,
   // Modules on npm known to export a compatible interface:
   // - hyperswarm
   // - hyperswarm-web
   // - hyper-simulator
-  constructor (swarm = null, swarmOpts) {
+  constructor (Swarm = null, swarmOpts) {
     D('[Modem56] Brrrrrr.. ptong ptong ptong ptong *whitenoise*')
-    this.swarm = swarm || hyperswarm(swarmOpts)
+    this.swarm = new Swarm(swarmOpts) // || hyperswarm(swarmOpts)
     // Initial release support only 1 topic due to design limitations
     this._topic = null
     this._spawnWire = null
     this._onconnection = this._onconnection.bind(this)
+    this.swarm.on('update', () => D('update', this.swarm.connecting)) // , this.swarm.connections))
     this.swarm.on('error', err => console.error('[Modem56] swarm error: ', err.message))
   }
 
-  join (topic, spawnWire) {
+  async join (topic, spawnWire) {
     if (this._topic) {
       // this.leave()
       // don't wanna have multi-topic support yet
@@ -39,34 +45,37 @@ class Modem56 {
       return
     }
     if (typeof topic === 'string') {
-      topic = crypto.createHash('sha256')
-        .update(topic)
-        .digest()
+      topic = await hash(s2b(topic))
     }
-    this.swarm.join(topic)
+    D('Joining topic', toHex(topic))
     this._spawnWire = spawnWire
     this._topic = topic
     this.swarm.on('connection', this._onconnection)
+    const discovery = this.swarm.join(topic)
+    await discovery.flushed()
     return () => this.leave()
   }
 
   _onconnection (socket, details) {
     D('[Modem56] peer connected', details)
     const { client } = details
-    const hyperProtocolStream = new ProtoStream(client)
-    socket.pipe(hyperProtocolStream).pipe(socket)
-    hyperProtocolStream.on('error', err => console.error('[Modem56] hyper-proto error: ', err.message))
-    socket.on('error', err => console.error('[Modem56] socket error: ', err.message))
-    const encryptionKey = this._topic
     const plug = this._spawnWire(details)
-    hyperWire(plug, hyperProtocolStream, encryptionKey)
+    socket.on('error', err => console.error('[Modem56] socket error: ', err.message))
+    if (false) { // use noise encyption / protomux
+      const hyperProtocolStream = new ProtoStream(client) // ProtoStream is dead
+      socket.pipe(hyperProtocolStream).pipe(socket)
+      hyperProtocolStream.on('error', err => console.error('[Modem56] hyper-proto error: ', err.message))
+      const encryptionKey = this._topic
+      hyperWire(plug, hyperProtocolStream, encryptionKey)
+    } else {
+      streamWire(plug, socket)
+    }
   }
 
   leave () {
     this.swarm.leave(this._topic)
     this.swarm.off('connection', this._onconnection)
     this._topic = null
+    this._spawnWire = null
   }
 }
-
-module.exports = Modem56

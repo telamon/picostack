@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/telamon/picostack",
   "devDependencies": {
-    "@types/web": "^0.0.151",
+    "@types/web": "^0.0.152",
     "brittle": "^3.6.1",
     "browserify": "^17.0.0",
     "debug": "^4.3.6",
@@ -47,7 +47,7 @@
     "@telamon/picostore": "3.0.2",
     "cborg": "^4.2.3",
     "picofeed": "^8.0.5",
-    "piconet": "^3.2.2",
+    "piconet": "^4.0.0",
     "piconuro": "^1.0.1",
     "picorepo": "^2.2.5"
   }
