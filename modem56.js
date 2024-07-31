@@ -36,7 +36,7 @@ export class Modem56 {
     this.swarm.on('error', err => console.error('[Modem56] swarm error: ', err.message))
   }
 
-  async join (topic, spawnWire) {
+  async join (topic, spawnWire, noWaitFlush = false) {
     if (this._topic) {
       // this.leave()
       // don't wanna have multi-topic support yet
@@ -52,7 +52,7 @@ export class Modem56 {
     this._topic = topic
     this.swarm.on('connection', this._onconnection)
     const discovery = this.swarm.join(topic)
-    await discovery.flushed()
+    if (!noWaitFlush) await discovery.flushed()
     return () => this.leave()
   }
 

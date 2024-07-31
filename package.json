@@ -44,10 +44,10 @@
     "wtfnode": "^0.9.3"
   },
   "dependencies": {
-    "@telamon/picostore": "3.0.2",
+    "@telamon/picostore": "3.0.4",
     "cborg": "^4.2.3",
     "picofeed": "^8.0.5",
-    "piconet": "^4.0.0",
+    "piconet": "^4.0.2",
     "piconuro": "^1.0.1",
     "picorepo": "^2.2.5"
   }

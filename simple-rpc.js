@@ -76,6 +76,10 @@ export class SimpleRPC {
 
   async _controller (node, msg, replyTo) {
     try {
+      if (!msg.length) { // TODO: delete, this issue has been adressed
+        console.warn('Zero length message received')
+        return
+      }
       const { type, data } = decodeMsg(msg)
       switch (type) {
         // Download blocks
