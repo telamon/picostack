@@ -32,7 +32,7 @@ export class Modem56 {
     this._topic = null
     this._spawnWire = null
     this._onconnection = this._onconnection.bind(this)
-    this.swarm.on('update', () => D('update', this.swarm.connecting)) // , this.swarm.connections))
+    // this.swarm.on('update', () => D('update', this.swarm.connecting)) // , this.swarm.connections))
     this.swarm.on('error', err => console.error('[Modem56] swarm error: ', err.message))
   }
 
@@ -57,7 +57,7 @@ export class Modem56 {
   }
 
   _onconnection (socket, details) {
-    D('[Modem56] peer connected', details)
+    D('[Modem56] peer connected') //, details)
     const plug = this._spawnWire(details)
     socket.on('error', err => console.error('[Modem56] socket error: ', err.message))
     // socket is nowadays pre-encrypted?
