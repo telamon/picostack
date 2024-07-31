@@ -35,10 +35,8 @@
   "devDependencies": {
     "@types/web": "^0.0.152",
     "brittle": "^3.6.1",
-    "browserify": "^17.0.0",
     "debug": "^4.3.6",
-    "hypercore-protocol": "^8.0.7",
-    "hyperswarm-web": "^2.2.0",
+    "hyperswarm": "^4.8.2",
     "memory-level": "^1.0.0",
     "standard": "^17.1.0",
     "wtfnode": "^0.9.3"
@@ -47,7 +45,7 @@
     "@telamon/picostore": "3.0.4",
     "cborg": "^4.2.3",
     "picofeed": "^8.0.5",
-    "piconet": "^4.0.2",
+    "piconet": "^4.0.3",
     "piconuro": "^1.0.1",
     "picorepo": "^2.2.5"
   }
